@@ -50,10 +50,17 @@ jobs:
             fi
           done
 
+
+          # If multiple regions are deleted, join them with a comma
+          DELETED_REGIONS=$(echo "$DELETED_REGIONS" | tr '\n' ',')
+          
+          # Remove the trailing comma if present
+          DELETED_REGIONS="${DELETED_REGIONS%,}"
+
           # Set environment variables for deleted regions
-          echo "REGION_DELETED=$REGION_DELETED" >> $GITHUB_ENV
+          echo "REGIONS_DELETED=$REGION_DELETED" >> $GITHUB_ENV
           echo "DELETED_REGIONS=$DELETED_REGIONS" >> $GITHUB_ENV
           
           # Output the environment variables for logging purposes (optional)
           echo "Deleted regions: $DELETED_REGIONS"
-          echo "Region deleted: $REGION_DELETED"
+          echo "Regions deleted: $REGION_DELETED"
