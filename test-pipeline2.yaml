@@ -1,9 +1,5 @@
 name: test-pipeline
-description: Test Pipeline for EvertzIO
-owner: adarshs@evertz.com
-build_environment:
-  architecture: x86_64
-  platform: amazonlinux2
+description: Test Pipeline
 repository_name: test_pipeline
 pipeline_type: service
 regions:
