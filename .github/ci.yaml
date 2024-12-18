@@ -1,0 +1,47 @@
+name: Detect Deleted Regions in YAML
+
+on:
+  push:
+    paths:
+      - '**/*.yaml'
+      - '**/*.yml'
+
+jobs:
+  detect-deleted-regions:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@v44
+        with:
+          files: '**/*.yaml **/*.yml'
+
+      - name: Install yq
+        run: |
+          sudo snap install yq
+
+      - name: Detect deleted regions
+        run: |
+          for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
+            echo "Processing file: $file"
+
+            # Get regions from the previous commit
+            git show HEAD~1:$file > old_file.yaml || echo "" > old_file.yaml
+
+            old_regions=$(yq '.regions[]' old_file.yaml || echo "")
+            new_regions=$(yq '.regions[]' $file || echo "")
+
+            # Find deleted regions
+            deleted_regions=$(comm -23 <(echo "$old_regions" | sort) <(echo "$new_regions" | sort))
+
+            if [ -n "$deleted_regions" ]; then
+              echo "Deleted regions in $file:"
+              echo "$deleted_regions"
+            else
+              echo "No regions deleted in $file."
+            fi
+          done
