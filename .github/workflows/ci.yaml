@@ -2,7 +2,6 @@ on:
   push:
     paths:
       - 'pipelines/*.yaml'
-      - 'pipelines/*.yml'
 
 jobs:
   detect-deleted-regions:
@@ -16,7 +15,7 @@ jobs:
         id: changed-files
         uses: tj-actions/changed-files@v44
         with:
-          files: 'pipelines/*.yaml pipelines/*.yml'
+          files: 'pipelines/*.yaml'
 
       - name: Install yq
         run: |
