@@ -4,6 +4,9 @@ repository_name: test_pipeline
 pipeline_type: service
 regions:
   - us-east-1
+  - us-west-2
+  - eu-west-1
+  - ap-southeast-1
 deployments:
     dev:
       created: true
