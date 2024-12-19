@@ -54,3 +54,10 @@ jobs:
           ALL_DELETED_FILES: ${{ steps.changed-files.outputs.deleted_files }}
           ALL_DELETED_FILES_COUNT: ${{ steps.changed-files.outputs.deleted_files_count }}
           DELETED_PIPELINES_RECOVER_DIR: ${{ env.DELETED_PIPELINES_RECOVER_DIR }}
+        run: |
+          echo "ALL_CHANGED_FILES=$ALL_CHANGED_FILES" >> $GITHUB_ENV
+          echo "ALL_CHANGED_FILES_COUNT=$ALL_CHANGED_FILES_COUNT" >> $GITHUB_ENV
+          echo "ALL_DELETED_FILES=$ALL_DELETED_FILES" >> $GITHUB_ENV
+          echo "ALL_DELETED_FILES_COUNT=$ALL_DELETED_FILES_COUNT" >> $GITHUB_ENV
+          echo "DELETED_PIPELINES_RECOVER_DIR=$DELETED_PIPELINES_RECOVER_DIR" >> $GITHUB_ENV
+          echo "DELETED_PIPELINES_RECOVER_DIR=$DELETED_PIPELINES_RECOVER_DIR"
