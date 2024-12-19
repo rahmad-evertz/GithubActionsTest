@@ -1,0 +1,34 @@
+on:
+  push:
+    paths:
+      - 'pipelines/*.yaml'
+
+jobs:
+  detect-deleted-regions:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@v44
+        with:
+          files: 'pipelines/*.yaml'
+
+      - name: Install yq
+        run: |
+          sudo snap install yq
+
+      - name: Detect deleted regions or files
+        run: |
+          DELETED_REGIONS=$(for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
+            if git ls-tree -r HEAD --name-only | grep -q "$file"; then
+              old_regions=$(git show HEAD~1:$file | yq '.regions[]' || echo "")
+              new_regions=$(yq '.regions[]' $file || echo "")
+              comm -23 <(echo "$old_regions" | sort) <(echo "$new_regions" | sort)
+            fi
+          done | paste -sd "," -)
+          echo "DELETED_REGIONS=$DELETED_REGIONS" >> $GITHUB_ENV
+          echo "DELETED_REGIONS=$DELETED_REGIONS"
