@@ -23,44 +23,12 @@ jobs:
 
       - name: Detect deleted regions or files
         run: |
-          REGION_DELETED="false"
-          DELETED_REGIONS=""
-          
-          for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
-            echo "Processing file: $file"
-            
-            # Check if the file was deleted
-            if ! git ls-tree -r HEAD --name-only | grep -q "$file"; then
-              echo "File $file was deleted in this commit."
-              continue
+          DELETED_REGIONS=$(for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
+            if git ls-tree -r HEAD --name-only | grep -q "$file"; then
+              old_regions=$(git show HEAD~1:$file | yq '.regions[]' || echo "")
+              new_regions=$(yq '.regions[]' $file || echo "")
+              comm -23 <(echo "$old_regions" | sort) <(echo "$new_regions" | sort)
             fi
-
-            # Get regions from the previous commit
-            git show HEAD~1:$file > old_file.yaml || echo "" > old_file.yaml
-
-            old_regions=$(yq '.regions[]' old_file.yaml || echo "")
-            new_regions=$(yq '.regions[]' $file || echo "")
-
-            # Find deleted regions
-            deleted_regions=$(comm -23 <(echo "$old_regions" | sort) <(echo "$new_regions" | sort))
-
-            if [ -n "$deleted_regions" ]; then
-              REGION_DELETED="true"
-              DELETED_REGIONS="$deleted_regions"
-            fi
-          done
-
-
-          # If multiple regions are deleted, join them with a comma
-          DELETED_REGIONS=$(echo "$DELETED_REGIONS" | tr '\n' ',')
-          
-          # Remove the trailing comma if present
-          DELETED_REGIONS="${DELETED_REGIONS%,}"
-
-          # Set environment variables for deleted regions
-          echo "REGIONS_DELETED=$REGION_DELETED" >> $GITHUB_ENV
+          done | paste -sd "," -)
           echo "DELETED_REGIONS=$DELETED_REGIONS" >> $GITHUB_ENV
-          
-          # Output the environment variables for logging purposes (optional)
-          echo "Deleted regions: $DELETED_REGIONS"
-          echo "Regions deleted: $REGION_DELETED"
+          echo "DELETED_REGIONS=$DELETED_REGIONS"
