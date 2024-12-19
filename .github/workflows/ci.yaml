@@ -54,5 +54,3 @@ jobs:
           ALL_DELETED_FILES: ${{ steps.changed-files.outputs.deleted_files }}
           ALL_DELETED_FILES_COUNT: ${{ steps.changed-files.outputs.deleted_files_count }}
           DELETED_PIPELINES_RECOVER_DIR: ${{ env.DELETED_PIPELINES_RECOVER_DIR }}
-        # run: |
-        #   pipenv run ./src/evertz_io_pipeline_factory/deploy.py --check_only
