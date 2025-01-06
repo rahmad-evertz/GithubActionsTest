@@ -1,63 +1,63 @@
-name: CI
+# name: CI
 
-on:
-  pull_request:
-    types: [opened, reopened, synchronize]
-    paths:
-      - 'pipelines/*.yaml'
-env:
-  DELETED_PIPELINES_RECOVER_DIR: deleted_pipelines
+# on:
+#   pull_request:
+#     types: [opened, reopened, synchronize]
+#     paths:
+#       - 'pipelines/*.yaml'
+# env:
+#   DELETED_PIPELINES_RECOVER_DIR: deleted_pipelines
 
-jobs:
-  validate_pipelines:
-    runs-on: ubuntu-latest
-    name: Validate pipelines
-    steps:
-      - name: Set up environment
-        run: |
-          # Create a temporary directory to store deleted pipelines
-          mkdir $DELETED_PIPELINES_RECOVER_DIR
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - name: Set up Python 3.9
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.9"
-      - name: Get changed files
-        id: changed-files
-        uses: tj-actions/changed-files@v44
-        with:
-          files: 'pipelines/*.yaml'
-          separator: ","
-          recover_deleted_files: true
-          recover_deleted_files_to_destination: ${{ env.DELETED_PIPELINES_RECOVER_DIR }}
-      - name: Install yq
-        run: |
-          sudo snap install yq
-      - name: Detect deleted regions for pipelines
-        run: |
-          DELETED_REGIONS=$(for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
-            if git ls-tree -r HEAD --name-only | grep -q "$file"; then
-              old_regions=$(git show HEAD~1:$file | yq '.regions[]' || echo "")
-              new_regions=$(yq '.regions[]' $file || echo "")
-              comm -23 <(echo "$old_regions" | sort) <(echo "$new_regions" | sort)
-            fi
-          done | paste -sd "," -)
-          echo "DELETED_REGIONS=$DELETED_REGIONS" >> $GITHUB_ENV
-          echo "DELETED_REGIONS=$DELETED_REGIONS"
-      - name: Setting up environment variables
-        env:
-          # all_changed_files doesn't include deleted files, only added, copied, modified and renamed
-          ALL_CHANGED_FILES: ${{ steps.changed-files.outputs.all_changed_files }}
-          ALL_CHANGED_FILES_COUNT: ${{ steps.changed-files.outputs.all_changed_files_count }}
-          ALL_DELETED_FILES: ${{ steps.changed-files.outputs.deleted_files }}
-          ALL_DELETED_FILES_COUNT: ${{ steps.changed-files.outputs.deleted_files_count }}
-          DELETED_PIPELINES_RECOVER_DIR: ${{ env.DELETED_PIPELINES_RECOVER_DIR }}
-        run: |
-          echo "ALL_CHANGED_FILES=$ALL_CHANGED_FILES" >> $GITHUB_ENV
-          echo "ALL_CHANGED_FILES_COUNT=$ALL_CHANGED_FILES_COUNT" >> $GITHUB_ENV
-          echo "ALL_DELETED_FILES=$ALL_DELETED_FILES" >> $GITHUB_ENV
-          echo "ALL_DELETED_FILES_COUNT=$ALL_DELETED_FILES_COUNT" >> $GITHUB_ENV
-          echo "DELETED_PIPELINES_RECOVER_DIR=$DELETED_PIPELINES_RECOVER_DIR" >> $GITHUB_ENV
-          echo "DELETED_PIPELINES_RECOVER_DIR=$DELETED_PIPELINES_RECOVER_DIR"
+# jobs:
+#   validate_pipelines:
+#     runs-on: ubuntu-latest
+#     name: Validate pipelines
+#     steps:
+#       - name: Set up environment
+#         run: |
+#           # Create a temporary directory to store deleted pipelines
+#           mkdir $DELETED_PIPELINES_RECOVER_DIR
+#       - uses: actions/checkout@v4
+#         with:
+#           fetch-depth: 0
+#       - name: Set up Python 3.9
+#         uses: actions/setup-python@v5
+#         with:
+#           python-version: "3.9"
+#       - name: Get changed files
+#         id: changed-files
+#         uses: tj-actions/changed-files@v44
+#         with:
+#           files: 'pipelines/*.yaml'
+#           separator: ","
+#           recover_deleted_files: true
+#           recover_deleted_files_to_destination: ${{ env.DELETED_PIPELINES_RECOVER_DIR }}
+#       - name: Install yq
+#         run: |
+#           sudo snap install yq
+#       - name: Detect deleted regions for pipelines
+#         run: |
+#           DELETED_REGIONS=$(for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
+#             if git ls-tree -r HEAD --name-only | grep -q "$file"; then
+#               old_regions=$(git show HEAD~1:$file | yq '.regions[]' || echo "")
+#               new_regions=$(yq '.regions[]' $file || echo "")
+#               comm -23 <(echo "$old_regions" | sort) <(echo "$new_regions" | sort)
+#             fi
+#           done | paste -sd "," -)
+#           echo "DELETED_REGIONS=$DELETED_REGIONS" >> $GITHUB_ENV
+#           echo "DELETED_REGIONS=$DELETED_REGIONS"
+#       - name: Setting up environment variables
+#         env:
+#           # all_changed_files doesn't include deleted files, only added, copied, modified and renamed
+#           ALL_CHANGED_FILES: ${{ steps.changed-files.outputs.all_changed_files }}
+#           ALL_CHANGED_FILES_COUNT: ${{ steps.changed-files.outputs.all_changed_files_count }}
+#           ALL_DELETED_FILES: ${{ steps.changed-files.outputs.deleted_files }}
+#           ALL_DELETED_FILES_COUNT: ${{ steps.changed-files.outputs.deleted_files_count }}
+#           DELETED_PIPELINES_RECOVER_DIR: ${{ env.DELETED_PIPELINES_RECOVER_DIR }}
+#         run: |
+#           echo "ALL_CHANGED_FILES=$ALL_CHANGED_FILES" >> $GITHUB_ENV
+#           echo "ALL_CHANGED_FILES_COUNT=$ALL_CHANGED_FILES_COUNT" >> $GITHUB_ENV
+#           echo "ALL_DELETED_FILES=$ALL_DELETED_FILES" >> $GITHUB_ENV
+#           echo "ALL_DELETED_FILES_COUNT=$ALL_DELETED_FILES_COUNT" >> $GITHUB_ENV
+#           echo "DELETED_PIPELINES_RECOVER_DIR=$DELETED_PIPELINES_RECOVER_DIR" >> $GITHUB_ENV
+#           echo "DELETED_PIPELINES_RECOVER_DIR=$DELETED_PIPELINES_RECOVER_DIR"

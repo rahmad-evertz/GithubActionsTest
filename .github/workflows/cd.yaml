@@ -1,5 +1,12 @@
+name: CD
+
+# on:
+#   push:
+#     paths:
+#       - 'pipelines/*.yaml'
 on:
-  push:
+  pull_request:
+    types: [opened, reopened, synchronize]
     paths:
       - 'pipelines/*.yaml'
 
