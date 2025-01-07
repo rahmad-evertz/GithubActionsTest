@@ -1,9 +1,5 @@
 name: CD
 
-# on:
-#   push:
-#     paths:
-#       - 'pipelines/*.yaml'
 on:
   pull_request:
     types: [opened, reopened, synchronize]
@@ -34,9 +30,10 @@ jobs:
             if git ls-tree -r HEAD --name-only | grep -q "$file"; then
               old_regions=$(git show HEAD~1:$file | yq '.regions[]' || echo "")
               new_regions=$(yq '.regions[]' $file || echo "")
-              comm -23 <(echo "$old_regions" | sort) <(echo "$new_regions" | sort)
+              deleted_regions=$(comm -23 <(echo "$old_regions" | sort) <(echo "$new_regions" | sort))
+              if [ -n "$deleted_regions" ]; then
+                echo "$deleted_regions"
+              fi
             fi
           done | paste -sd "," -)
-          echo "DELETED_REGIONS=$DELETED_REGIONS" >> $GITHUB_ENV
-          echo "DELETED_REGIONS=$DELETED_REGIONS"
-          
+          echo "DELETED_REGIONS=${DELETED_REGIONS}"
