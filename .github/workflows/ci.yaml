@@ -1,9 +1,8 @@
-name: CD
+name: CI
 
 on:
-  push:
-    branches:
-      - main
+  pull_request:
+    types: [opened, reopened, synchronize]
     paths:
       - 'pipelines/*.yaml'
 
@@ -48,4 +47,3 @@ jobs:
           # Export the deleted regions as an environment variable
           echo "DELETED_REGIONS=${DELETED_REGIONS}" >> $GITHUB_ENV
           echo "DELETED_REGIONS=${DELETED_REGIONS}"
-          
