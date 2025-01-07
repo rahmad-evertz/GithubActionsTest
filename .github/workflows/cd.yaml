@@ -14,19 +14,20 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Get changed files
+      - name: Get changed files in the last commit
         id: changed-files
-        uses: tj-actions/changed-files@v44
-        with:
-          files: 'pipelines/*.yaml'
+        run: |
+          CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD -- pipelines/*.yaml)
+          echo "CHANGED_FILES=${CHANGED_FILES}"
+          echo "CHANGED_FILES=${CHANGED_FILES}" >> $GITHUB_ENV
 
       - name: Install yq
         run: |
           sudo snap install yq
 
-      - name: Detect deleted regions or files
+      - name: Detect deleted regions or files from the last commit
         run: |
-          DELETED_REGIONS=$(for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
+          DELETED_REGIONS=$(for file in ${{ env.CHANGED_FILES }}; do
             if git ls-tree -r HEAD --name-only | grep -q "$file"; then
               old_regions=$(git show HEAD~1:$file | yq '.regions[]' || echo "")
               new_regions=$(yq '.regions[]' $file || echo "")
@@ -37,3 +38,4 @@ jobs:
             fi
           done | paste -sd "," -)
           echo "DELETED_REGIONS=${DELETED_REGIONS}"
+          echo "DELETED_REGIONS=${DELETED_REGIONS}" >> $GITHUB_ENV
