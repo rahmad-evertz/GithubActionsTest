@@ -15,27 +15,35 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Get changed files in the last commit
-        id: changed-files
-        run: |
-          CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD -- pipelines/*.yaml)
-          echo "CHANGED_FILES=${CHANGED_FILES}"
-          echo "CHANGED_FILES=${CHANGED_FILES}" >> $GITHUB_ENV
+        id: get-changed-files
+        uses: tj-actions/changed-files@v44
+        with:
+          files: 'pipelines/*.yaml'
 
       - name: Install yq
         run: |
           sudo snap install yq
 
-      - name: Detect deleted regions or files from the last commit
+      - name: Detect deleted regions in YAML files
         run: |
-          DELETED_REGIONS=$(for file in ${{ env.CHANGED_FILES }}; do
-            if git ls-tree -r HEAD --name-only | grep -q "$file"; then
-              old_regions=$(git show HEAD~1:$file | yq '.regions[]' || echo "")
-              new_regions=$(yq '.regions[]' $file || echo "")
-              deleted_regions=$(comm -23 <(echo "$old_regions" | sort) <(echo "$new_regions" | sort))
-              if [ -n "$deleted_regions" ]; then
-                echo "$deleted_regions"
+          # Initialize the DELETED_REGIONS variable
+          DELETED_REGIONS=$(
+            for file in ${{ steps.get-changed-files.outputs.all_changed_files }}; do
+              # Check if the file exists in the latest commit
+              if git ls-tree -r HEAD --name-only | grep -q "$file"; then
+                # Get regions from the previous commit
+                previous_regions=$(git show HEAD~1:$file | yq '.regions[]' || echo "")
+                # Get regions from the current commit
+                current_regions=$(yq '.regions[]' $file || echo "")
+                # Find deleted regions by comparing the two lists
+                deleted_regions=$(comm -23 <(echo "$previous_regions" | sort) <(echo "$current_regions" | sort))
+                # Print the deleted regions
+                if [ -n "$deleted_regions" ]; then
+                  echo "$deleted_regions"
+                fi
               fi
-            fi
-          done | paste -sd "," -)
-          echo "DELETED_REGIONS=${DELETED_REGIONS}"
+            done | paste -sd "," -  # Combine results into a comma-separated list
+          )
+          # Export the deleted regions as an environment variable
           echo "DELETED_REGIONS=${DELETED_REGIONS}" >> $GITHUB_ENV
+          echo "DELETED_REGIONS=${DELETED_REGIONS}"
